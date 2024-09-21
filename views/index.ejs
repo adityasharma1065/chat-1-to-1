@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/stylesheets/style1.css">
+    <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css"
+    rel="stylesheet"
+/>
+</head>
+<body>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+
+    
+
+    <div id="main">
+
+        <div id="prompt">
+            <h4>Aditya Joined</h4>
+        </div>
+
+        <div id="startBox">
+            <form id="form" action="">
+                <input id="nameinp" type="text" placeholder="Name..." autocomplete="off">
+                <input type="submit" value="Start Chat">
+            </form>
+        </div>        
+
+
+                <div id="window">
+                    <div id="nav">
+                        <h2>Chat App</h2>
+                        <h4>Talking to: <span></span></h4>
+                    </div>
+
+
+                    <div id="chat-window">
+                        
+                    </div>
+
+
+                    <div id="input">
+                        <form action="">
+                            <input id="inp"  type="text" placeholder="Type a message..." autocomplete="off">
+                            <input id="sub" type="submit" value="Send">
+                        </form>
+                    
+                    </div>
+                </div>
+    </div>
+
+
+    <script>
+        const socket=io();
+        room=null;
+        function scrollToBottom() {
+            var chatContainer = document.querySelector('#chat-window');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+     
+      
+
+      socket.on("members",(users)=>{
+        
+             console.log(users);
+
+             if(users.length <=1){
+                document.querySelector("#nav h4 span").innerHTML=""
+             }
+             else{
+                 for(var key in users){
+                    if(key!=socket.id){
+                        document.querySelector("#nav h4 span").innerHTML=users[key]
+                    }
+                 }
+             }
+      })
+        
+        document.querySelector("#startBox form").addEventListener("submit",function(event){
+            event.preventDefault();
+            
+            var inp=document.querySelector("#nameinp")
+            inp=inp.value.trim()
+            if(inp){
+                console.log(inp);
+                
+                socket.emit("joinroom",inp)
+                document.querySelector("#startBox").style.display="none";
+                document.querySelector("#window").style.display="flex";
+
+            }
+
+        })
+
+        socket.on("joinedroom",(val)=>{
+               room=val.roomid;
+               console.log("joined room: ",val.name);
+               document.querySelector("#prompt h4").innerHTML=`<span>${val.name}</span> Joined!`
+               document.querySelector("#prompt").style.opacity=1;
+               var timer=setTimeout(()=>{
+                document.querySelector("#prompt").style.opacity=0;
+               },2500)
+               timer()
+               clearTimeout(timer)
+              
+               
+        })
+
+        document.querySelector("#input form").addEventListener("submit",(event)=>{
+            event.preventDefault();
+            var window=document.querySelector("#chat-window")
+
+            var inp=document.querySelector("#inp")
+            inp=inp.value.trim()
+            if(inp){
+                socket.emit("message",{inp,room})
+
+               
+                
+                window.innerHTML+=`
+                        <div class="sender-m"><h4> ${inp}</h4></div>
+                        `
+                        scrollToBottom();
+            }
+            document.querySelector("#inp").value=""
+        })
+
+        socket.on("message",(details)=>{
+            var window=document.querySelector("#chat-window")
+            window.innerHTML+=`
+                        <div class="receiver-m"><h4> ${details.message}</h4></div>
+                        `
+                        scrollToBottom();
+        })
+
+        
+
+
+
+         
+
+
+
+         
+    </script>
+    
+</body>
+</html>
